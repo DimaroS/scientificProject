@@ -41,7 +41,9 @@ class EosDataHolder:
     _beta_integrate_from: Optional[float]
     _lattice_size_T: LatticeSizes
     _lattice_size_O: LatticeSizes
-    aspect_ratio: float
+    aspect_ratio_r: float
+    aspect_ratio_z: float
+    aspect_ratio_t: float
     _raw_data_T: List[List[float]]
     _raw_data_O: List[List[float]]
     _betas: np.ndarray
@@ -98,7 +100,10 @@ class EosDataHolder:
             description["lattice_spacial_size"]["Nx"],
             description["lattice_spacial_size"]["Ny"],
             description["lattice_spacial_size"]["Nz"])
-        self.aspect_ratio = self._lattice_size_T.nz / self._lattice_size_T.nt
+        self.aspect_ratio_r = ((self._lattice_size_T.nx - 1)
+                               / self._lattice_size_T.nt)
+        self.aspect_ratio_z = self._lattice_size_T.nz / self._lattice_size_T.nt
+        self.aspect_ratio_t = self._lattice_size_O.nt / self._lattice_size_T.nt
         self._raw_data_T = sychev_csv_reader.load_float_csv(
             description["Nt_T_filename"])
         self._raw_data_O = sychev_csv_reader.load_float_csv(

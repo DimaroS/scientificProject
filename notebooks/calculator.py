@@ -205,19 +205,6 @@ class MomentOfInertiaCalculator:
         return c0, c2
 
 
-class ConstVelocityCalculator:
-    """Class for lattice size dependence analysis.
-
-    Not yet implemented. (This dependence outside
-    the phase transition region is rather weak.)
-    """
-
-    holders_pool: DataHoldersPool
-
-    def __init__(self, holders_pool: DataHoldersPool) -> None:
-        self.holders_pool = holders_pool
-
-
 class Calculator:
     """Class for higher logic operations like loading and grouping.
 
@@ -225,19 +212,15 @@ class Calculator:
     aspect ratio dependence analysis.
     """
 
+    nt: int
     eos_holders_pool: DataHoldersPool
-    r_groups: Dict[float, DataHoldersPool]
-    inertia_analysis_dict: Dict[float, MomentOfInertiaCalculator]
-    velocity_groups: Dict[float, DataHoldersPool]
-    r_analysis_dict: Dict[float, ConstVelocityCalculator]
+    moi_calc: Optional[MomentOfInertiaCalculator]
 
     def __init__(self) -> None:
         """Creates an empty Calculator."""
+        self.nt = 0
         self.eos_holders_pool = DataHoldersPool()
-        self.r_groups = dict()
-        self.inertia_analysis_dict = dict()
-        self.velocity_groups = dict()
-        self.r_analysis_dict = dict()
+        self.moi_calc = None
 
     @classmethod
     def load_from_json(
@@ -279,31 +262,5 @@ class Calculator:
                 data_holder = data_holder_module.EosDataHolder(
                     item, integrator, interpolator)
                 self.eos_holders_pool.add(data_holder)
-        self._group_const_aspect_ratio()
-        self._group_const_velocity()
-
-    def _group_const_aspect_ratio(self) -> None:
-        """Groups EosDataHolder classes based on their lattice aspect ratio."""
-        for holder in self.eos_holders_pool.data_holders:
-            if holder.aspect_ratio in self.r_groups:
-                self.r_groups[holder.aspect_ratio].add(holder)
-            else:
-                self.r_groups[holder.aspect_ratio] = DataHoldersPool()
-                self.r_groups[holder.aspect_ratio].add(holder)
-        for aspect_ratio in self.r_groups:
-            if aspect_ratio == 14:
-                continue
-            self.inertia_analysis_dict[aspect_ratio] = (
-                MomentOfInertiaCalculator(self.r_groups[aspect_ratio]))
-
-    def _group_const_velocity(self) -> None:
-        """Groups EosDataHolder classes based on their rotation velocity."""
-        for holder in self.eos_holders_pool.data_holders:
-            if holder.velocity in self.velocity_groups:
-                self.velocity_groups[holder.velocity].add(holder)
-            else:
-                self.velocity_groups[holder.velocity] = DataHoldersPool()
-                self.velocity_groups[holder.velocity].add(holder)
-        for velocity in self.velocity_groups:
-            self.r_analysis_dict[velocity] = ConstVelocityCalculator(
-                self.velocity_groups[velocity])
+                self.nt = data_holder._lattice_size_T.nt
+        self.moi_calc = MomentOfInertiaCalculator(self.eos_holders_pool)
