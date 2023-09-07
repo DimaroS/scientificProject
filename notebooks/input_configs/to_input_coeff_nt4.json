@@ -1,15 +1,19 @@
-[
-  {
-    "lattice_spacial_size": {
-      "Nx": 21,
-      "Ny": 21,
-      "Nz": 16
-    },
-    "beta_integration_node": 4.060,
-    "velocity": 0.0000,
-    "Nt_T": 4,
-    "Nt_T_filename": "/Users/dimaros/PycharmProjects/scientificProject/data/gluo_rotation_coeff/symanzik_actS_Nt4/beta_imp_actS_T_Nt4_Nz16_Ns21_0000v.txt",
-    "Nt_O": 16,
-    "Nt_O_filename": "/Users/dimaros/PycharmProjects/scientificProject/data/gluo_rotation_coeff/symanzik_actS_Nt4/beta_imp_actS_O_Nt4_Nz16_Ns21_0000v.txt"
-  }
-]
+{
+  "eos_lines": [
+    {
+      "lattice_spacial_size": {
+        "Nx": 21,
+        "Ny": 21,
+        "Nz": 16
+      },
+      "beta_integration_node": 4.060,
+      "velocity": 0.0000,
+      "Nt_T": 4,
+      "Nt_T_filename": "/Users/dimaros/PycharmProjects/scientificProject/data/gluo_rotation_coeff/symanzik_actS_Nt4/beta_imp_actS_T_Nt4_Nz16_Ns21_0000v.txt",
+      "Nt_O": 16,
+      "Nt_O_filename": "/Users/dimaros/PycharmProjects/scientificProject/data/gluo_rotation_coeff/symanzik_actS_Nt4/beta_imp_actS_O_Nt4_Nz16_Ns21_0000v.txt"
+    }
+  ],
+  "beta_critical": 4.073,
+  "default_scale_setter": "symanzik"
+}

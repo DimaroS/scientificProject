@@ -134,7 +134,8 @@ class EosDataHolder:
             else:
                 raise Warning(f"Skipping mismatching betas "
                               f"(beta_T = {self._raw_data_T[i][0]}; "
-                              f"beta_O = {self._raw_data_O[i][0]}).")
+                              f"beta_O = {self._raw_data_O[i][0]}; "
+                              f"v = {self.velocity}).")
         self._betas = np.array(_betas)
         t_val = np.array([float(self._raw_data_T[i][1])
                           for i in range(len(self._raw_data_T))])

@@ -6,7 +6,7 @@ PointRep and SplineRep via pyplot module.
 """
 
 from __future__ import annotations
-from typing import Tuple, Optional, Sequence
+from typing import Tuple, Optional, Sequence, Callable
 
 import numpy as np
 
@@ -147,8 +147,8 @@ class PointRep:
                      for i in range(len(self.x_val))]
         return PointRep(x_val, y_val, y_err)
 
-    def subpointrep_in_domain(
-            self, domain: domains.GeometricRange) -> PointRep:
+    def subpointrep_in_domain(self,
+                              domain: domains.GeometricRange) -> PointRep:
         """Selects points within given domain.
 
         Args:
@@ -167,6 +167,26 @@ class PointRep:
             y_err = [self.y_err[i] for i in range(len(self.x_val))
                      if domain.contains_point(self.x_val[i])]
         return PointRep(x_val, y_val, y_err)
+    
+    def x_val_transform(self, f: Callable[[float], float]) -> PointRep:
+        """"""
+        return PointRep([f(i) for i in self.x_val], self.y_val, self.y_err)
+
+    def y_valerr_transform(
+            self, f_val: Optional[Callable[[float], float]],
+            f_err: Optional[Callable[[float], float]]) -> PointRep:
+        """"""
+        if f_val is None:
+            f_val = lambda x: x
+        if f_err is None:
+            f_err = lambda x: x
+        return PointRep(
+            self.x_val,
+            [f_val(i) for i in self.y_val],
+            None if self.y_err is None else [f_err(i) for i in self.y_err])
+
+    def copy(self) -> PointRep:
+        return PointRep(self.x_val, self.y_val, self.y_err)
 
 
 class SplineRep:
@@ -400,6 +420,42 @@ class SplineRep:
         result_val = self.interpolator.get_interpolation(x_val, self.tck_val,
                                                          der)
         return result_val
+    
+    def x_val_transform(self, f: Callable[[float], float]) -> SplineRep:
+        """"""
+        x_val = np.linspace(self.domain.left, self.domain.right,
+                            num=self._points_to_interpolate)
+        y_val = self.interpolator.get_interpolation(x_val, self.tck_val)
+        if self.tck_err is not None:
+            y_err = self.interpolator.get_interpolation(x_val, self.tck_err)
+        else:
+            y_err = None
+        return self.from_point_rep(
+            PointRep([f(i) for i in x_val], y_val, y_err), self.interpolator)
+        
+    def y_valerr_transform(
+            self, f_val: Optional[Callable[[float], float]],
+            f_err: Optional[Callable[[float], float]]) -> SplineRep:
+        """"""
+        if f_val is None:
+            f_val = lambda x: x
+        if f_err is None:
+            f_err = lambda x: x
+        x_val = np.linspace(self.domain.left, self.domain.right,
+                            num=self._points_to_interpolate)
+        y_val = self.interpolator.get_interpolation(x_val, self.tck_val)
+        y_val = np.array([f_val(i) for i in y_val])
+        if self.tck_err is not None:
+            y_err = self.interpolator.get_interpolation(x_val, self.tck_err)
+            y_err = np.array([f_err(i) for i in y_err])
+        else:
+            y_err = None
+        return self.from_point_rep(PointRep(x_val, y_val, y_err),
+                                   self.interpolator)
+
+    def copy(self) -> SplineRep:
+        return self.from_interpolation(self.interpolator, self.domain,
+                                       self.tck_val, self.tck_err)
 
 
 def draw_point_rep(_plt,
@@ -501,7 +557,7 @@ def draw_spl_rep(_plt,
         domain = domain.intersection_with(spl_rep.domain)
         if domain.empty():
             return  # nothing to plot :(
-    number_of_points = 1000
+    number_of_points = spl_rep._points_to_interpolate
     x_val = np.linspace(domain.left, domain.right, num=number_of_points)
     y_val, y_err = spl_rep.calculate_points(x_val)
     if label is None or label_band is True:

@@ -17,6 +17,7 @@ import fitters
 import integrators
 import interpolators
 import plotters
+import scale_setters
 
 
 class DataHoldersPool:
@@ -213,6 +214,9 @@ class Calculator:
     """
 
     nt: int
+    beta_critical: float
+    scale_setter: scale_setters.GluoScaleSetter
+    tc_in_mev: float
     eos_holders_pool: DataHoldersPool
     moi_calc: Optional[MomentOfInertiaCalculator]
 
@@ -258,9 +262,21 @@ class Calculator:
         """Loads data based on JSON file."""
         with open(data_list_json_filename) as f:
             data_to_load = json.load(f)
-            for item in data_to_load:
+            for item in data_to_load["eos_lines"]:
                 data_holder = data_holder_module.EosDataHolder(
                     item, integrator, interpolator)
                 self.eos_holders_pool.add(data_holder)
                 self.nt = data_holder._lattice_size_T.nt
         self.moi_calc = MomentOfInertiaCalculator(self.eos_holders_pool)
+        self.beta_critical = data_to_load["beta_critical"]
+        if data_to_load["default_scale_setter"] == "symanzik":
+            self.scale_setter = scale_setters.SymanzikScaleSetter()
+        elif data_to_load["default_scale_setter"] == "wilson":
+            self.scale_setter = scale_setters.WilsonScaleSetter()
+        elif data_to_load["default_scale_setter"] == "wilson_extended":
+            self.scale_setter = scale_setters.ExtendedWilsonScaleSetter()
+        else:
+            raise RuntimeError("Unknown GluoScaleSetter identifier.")
+        self.tc_in_mev = self.scale_setter.get_temperature_in_mev(
+            [self.beta_critical], self.nt)[0]
+        
